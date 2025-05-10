@@ -1,55 +1,65 @@
-import React, { ChangeEventHandler, FormEvent, ReactElement, useEffect, useState } from 'react';
+import React, {
+  ChangeEventHandler,
+  FormEvent,
+  ReactElement,
+  useEffect,
+  useState,
+} from "react";
 
 // Constants for character representations
-const START_CHARACTED = '@';
-const END_CHARACTED = 'x';
-const DIRECTIONAL_CHARACTERS = '+';
-const CAN_UP_DOWN = '|';
-const CAN_RIGHT_LEFT = '-';
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const START_CHARACTED = "@";
+const END_CHARACTED = "x";
+const DIRECTIONAL_CHARACTERS = "+";
+const CAN_UP_DOWN = "|";
+const CAN_RIGHT_LEFT = "-";
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 // Direction mappings to reduce string duplication and miswriting
 const DIRECTIONS = {
-  UP: 'up',
-  DOWN: 'down',
-  LEFT: 'left',
-  RIGHT: 'right',
+  UP: "up",
+  DOWN: "down",
+  LEFT: "left",
+  RIGHT: "right",
 } as const;
 
 // Types
 interface Coordinates {
-  x: number,
-  y: number
+  x: number;
+  y: number;
 }
 
 interface CellContent extends Coordinates {
   content: string;
 }
 
-type DirectionsType = typeof DIRECTIONS[keyof typeof DIRECTIONS];
+type DirectionsType = (typeof DIRECTIONS)[keyof typeof DIRECTIONS];
 
 function TheTest() {
   // State declarations
-  const [textAreaValue, setTextAreaValue] = useState<string>('');
+  const [textAreaValue, setTextAreaValue] = useState<string>("");
   const [pastCoordinates, setPastCoordinates] = useState<Coordinates[]>([]);
   const [textAreaMap, setTextAreaMap] = useState<string[][]>([]);
   const [activities, setActivities] = useState<string[]>([]);
   const [characters, setCharacters] = useState<CellContent[]>([]);
   const [generalLoops, setGeneralLoops] = useState(0);
   const [pastDirections, setPastDirections] = useState<string[]>([]);
-  const [theLetters, setTheLetters] = useState('');
+  const [theLetters, setTheLetters] = useState("");
 
   /**
    * Retries the last direction if possible; otherwise, checks all directions.
    */
   const redoLastDirection = () => {
-    const lastDirection = pastDirections[pastDirections.length - 1] as DirectionsType;
+    const lastDirection = pastDirections[
+      pastDirections.length - 1
+    ] as DirectionsType;
     const lastCoordinates = pastCoordinates[pastCoordinates.length - 1];
 
     if (
-      (lastDirection === DIRECTIONS.DOWN && lastCoordinates.x < textAreaMap.length - 1) ||
+      (lastDirection === DIRECTIONS.DOWN &&
+        lastCoordinates.x < textAreaMap.length - 1) ||
       (lastDirection === DIRECTIONS.UP && lastCoordinates.x > 0) ||
-      (lastDirection === DIRECTIONS.RIGHT && lastCoordinates.y < textAreaMap[0].length - 1) ||
+      (lastDirection === DIRECTIONS.RIGHT &&
+        lastCoordinates.y < textAreaMap[0].length - 1) ||
       (lastDirection === DIRECTIONS.LEFT && lastCoordinates.y > 0)
     ) {
       goDirection(lastDirection);
@@ -60,8 +70,15 @@ function TheTest() {
 
   const canMove = (x: number, y: number, map: string[][]) => {
     const content = map?.[x]?.[y];
-    return content && content !== ' ' && !findCoordinates({ x, y }) &&
-      (content === CAN_UP_DOWN || content === CAN_RIGHT_LEFT || ALPHABET.includes(content) || content === DIRECTIONAL_CHARACTERS);
+    return (
+      content &&
+      content !== " " &&
+      !findCoordinates({ x, y }) &&
+      (content === CAN_UP_DOWN ||
+        content === CAN_RIGHT_LEFT ||
+        ALPHABET.includes(content) ||
+        content === DIRECTIONAL_CHARACTERS)
+    );
   };
 
   /**
@@ -73,19 +90,48 @@ function TheTest() {
   const checkFourDirections = (currentCell: Coordinates, map: string[][]) => {
     const currentCellContent = map[currentCell.x][currentCell.y];
 
-    const canUp = currentCellContent !== CAN_RIGHT_LEFT && canMove(currentCell.x - 1, currentCell.y, map);
-    const canDown = currentCellContent !== CAN_RIGHT_LEFT && canMove(currentCell.x + 1, currentCell.y, map);
-    const canRight = currentCellContent !== CAN_UP_DOWN && canMove(currentCell.x, currentCell.y + 1, map);
-    const canLeft = currentCellContent !== CAN_UP_DOWN && canMove(currentCell.x, currentCell.y - 1, map);
+    const canUp =
+      currentCellContent !== CAN_RIGHT_LEFT &&
+      canMove(currentCell.x - 1, currentCell.y, map);
+    const canDown =
+      currentCellContent !== CAN_RIGHT_LEFT &&
+      canMove(currentCell.x + 1, currentCell.y, map);
+    const canRight =
+      currentCellContent !== CAN_UP_DOWN &&
+      canMove(currentCell.x, currentCell.y + 1, map);
+    const canLeft =
+      currentCellContent !== CAN_UP_DOWN &&
+      canMove(currentCell.x, currentCell.y - 1, map);
 
     if (currentCellContent === END_CHARACTED) {
-      setCharacters([...characters, { content: END_CHARACTED, ...currentCell }]);
-      setTheLetters(Array.from(new Set(characters.filter(c => ALPHABET.includes(c.content)).map(c => JSON.stringify(c))))
-        .map(c => JSON.parse(c).content).join(''));
+      setCharacters([
+        ...characters,
+        { content: END_CHARACTED, ...currentCell },
+      ]);
+      setTheLetters(
+        Array.from(
+          new Set(
+            characters
+              .filter((c) => ALPHABET.includes(c.content))
+              .map((c) => JSON.stringify(c))
+          )
+        )
+          .map((c) => JSON.parse(c).content)
+          .join("")
+      );
 
-      return { canDown: false, canUp: false, canLeft: false, canRight: false, isFinished: true };
+      return {
+        canDown: false,
+        canUp: false,
+        canLeft: false,
+        canRight: false,
+        isFinished: true,
+      };
     } else if (!canDown && !canUp && !canLeft && !canRight) {
-      setCharacters([...characters, { content: currentCellContent, ...currentCell }]);
+      setCharacters([
+        ...characters,
+        { content: currentCellContent, ...currentCell },
+      ]);
       redoLastDirection();
     }
 
@@ -98,7 +144,7 @@ function TheTest() {
    * @returns True if already visited.
    */
   const findCoordinates = (coords: Coordinates): boolean => {
-    return !!pastCoordinates.find(c => c.x === coords.x && c.y === coords.y);
+    return !!pastCoordinates.find((c) => c.x === coords.x && c.y === coords.y);
   };
 
   /**
@@ -120,9 +166,14 @@ function TheTest() {
    * Normalizes and sets the map from textarea input.
    */
   const startCalculation = () => {
-    const map: string[][] = textAreaValue.split('\n').map(line => line.split(''));
-    const maxLength = Math.max(...map.map(row => row.length));
-    const mapNormalized = map.map(row => [...row, ...Array(maxLength - row.length).fill(' ')]);
+    const map: string[][] = textAreaValue
+      .split("\n")
+      .map((line) => line.split(""));
+    const maxLength = Math.max(...map.map((row) => row.length));
+    const mapNormalized = map.map((row) => [
+      ...row,
+      ...Array(maxLength - row.length).fill(" "),
+    ]);
     setTextAreaMap(mapNormalized);
   };
 
@@ -133,7 +184,7 @@ function TheTest() {
       const start = allStarts[0];
 
       if (allStarts.length !== 1 || allEnds.length !== 1) {
-        setActivities([...activities, 'Error']);
+        setActivities([...activities, "Error"]);
       } else {
         setPastCoordinates([...pastCoordinates, start]);
       }
@@ -143,7 +194,10 @@ function TheTest() {
   useEffect(() => {
     if (pastCoordinates.length > 0) {
       const last = pastCoordinates[pastCoordinates.length - 1];
-      setCharacters([...characters, { content: textAreaMap[last.x][last.y], ...last }]);
+      setCharacters([
+        ...characters,
+        { content: textAreaMap[last.x][last.y], ...last },
+      ]);
       setGeneralLoops(generalLoops + 1);
       loopSerching(textAreaMap);
     }
@@ -185,13 +239,23 @@ function TheTest() {
     const lastDir = pastDirections[pastDirections.length - 1];
 
     if (current === DIRECTIONAL_CHARACTERS && lastDir === direction) {
-      setActivities(['Error']);
+      setActivities(["Error"]);
       return;
     }
 
     const next: Coordinates = {
-      x: direction === DIRECTIONS.UP ? last.x - steps : direction === DIRECTIONS.DOWN ? last.x + steps : last.x,
-      y: direction === DIRECTIONS.LEFT ? last.y - steps : direction === DIRECTIONS.RIGHT ? last.y + steps : last.y
+      x:
+        direction === DIRECTIONS.UP
+          ? last.x - steps
+          : direction === DIRECTIONS.DOWN
+          ? last.x + steps
+          : last.x,
+      y:
+        direction === DIRECTIONS.LEFT
+          ? last.y - steps
+          : direction === DIRECTIONS.RIGHT
+          ? last.y + steps
+          : last.y,
     };
 
     setPastCoordinates([...pastCoordinates, next]);
@@ -214,20 +278,38 @@ function TheTest() {
   const removeDuplicates = (list: CellContent[]): ReactElement[] => {
     return Array.from(new Set(list.map(c => JSON.stringify(c))))
       .map(c => JSON.parse(c))
-      .map(c => <label>{c.content}</label>);
+      .map((c, idx) => <label key={idx}>{c.content}</label>); // ✅ Add `key`
   };
+  
 
   return (
     <div className="App">
-      <button onClick={() => startCalculation()}>Start</button>
+      <button data-testid="start-button" key="start-button" onClick={() => startCalculation()}>
+        Start
+      </button>
+      <textarea
+        data-testid="map-input"
+        onInput={(e) => setTextAreaValueHandlerMethod(e)}
+        rows={10}
+      ></textarea>
+
+      <div data-testid="result-section">
+        {activities.length > 0 && (
+          <div>
+            Result:{" "}
+            {activities.map((a, i) => (
+              <label key={i}>{a}</label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <b>Letters:</b>
+      <label data-testid="letters-output">{theLetters}</label>
       <br />
-      <textarea onInput={e => setTextAreaValueHandlerMethod(e)} rows={10}> </textarea>
-      <br /><br />
-      {activities.length > 0 && (
-        <div>Result: {activities.map((a, i) => <label key={i}>{a}</label>)}</div>
-      )}
-      <b>Letters:</b><label>{theLetters}</label><br />
-      <b>Path as characters:</b>{removeDuplicates(characters)}<br />
+      <b>Path as characters:</b>
+      <span data-testid="path-output">{removeDuplicates(characters)}</span>
+      <br />
     </div>
   );
 }
