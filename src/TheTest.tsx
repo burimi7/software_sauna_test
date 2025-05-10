@@ -298,7 +298,7 @@ function TheTest() {
           <div>
             Result:{" "}
             {activities.map((a, i) => (
-              <label key={i}>{a}</label>
+              <label data-testid={i}>{a}</label>
             ))}
           </div>
         )}

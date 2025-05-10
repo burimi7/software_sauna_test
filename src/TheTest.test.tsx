@@ -96,6 +96,20 @@ describe('TheTest component with test-ids', () => {
     expect(await screen.findByTestId('path-output')).toHaveTextContent('@-G-O|+-+|+-||+-O-N-+|I|+-+|+--+|ES|x');
     // expect(await screen.findByTestId('path-output')).toHaveTextContent('@-G-O-+|+-+|O||+-O-N-+|I|+-+|+-I-+|ES|x');
   });
+  
+  test('no starting point', async () => {
+    render(<TheTest />);
+    fireEvent.input(screen.getByTestId('map-input'), {
+      target: { value: `     -A---+
+          |
+  x-B-+   C
+      |   |
+      +---+` }
+    });
+    fireEvent.click(screen.getByTestId('start-button'));
+    expect(await screen.findByTestId('0')).toHaveTextContent('Error');
+    // expect(await screen.findByTestId('path-output')).toHaveTextContent('@-G-O-+|+-+|O||+-O-N-+|I|+-+|+-I-+|ES|x');
+  });  
 
   test('displays character path correctly', async () => {
     render(<TheTest />);
@@ -106,4 +120,70 @@ describe('TheTest component with test-ids', () => {
     const path = await screen.findByTestId('path-output');
     expect(path).toHaveTextContent('C');
   });
+
+  test('Ignore stuff after end of path', async () => {
+    render(<TheTest />);
+    fireEvent.input(screen.getByTestId('map-input'), {
+      target: { value: `  @-A--+
+       |
+       +-B--x-C--D` }
+    });
+    fireEvent.click(screen.getByTestId('start-button'));
+    expect(await screen.findByTestId('letters-output')).toHaveTextContent('AB');
+    expect(await screen.findByTestId('path-output')).toHaveTextContent('@-A--+|+-B--x');
+  });
+
+  test('Ignore stuff after end of path', async () => {
+    render(<TheTest />);
+    fireEvent.input(screen.getByTestId('map-input'), {
+      target: { value: `   @--A---+
+          |
+    B-+   C
+      |   |
+      +---+` }
+    });
+    fireEvent.click(screen.getByTestId('start-button'));
+    expect(await screen.findByTestId('0')).toHaveTextContent('Error');
+
+  });
+
+  test('Fork in path', async () => {
+    render(<TheTest />);
+    fireEvent.input(screen.getByTestId('map-input'), {
+      target: { value: `        x-B
+          |
+   @--A---+
+          |
+     x+   C
+      |   |
+      +---+` }
+    });
+    fireEvent.click(screen.getByTestId('start-button'));
+    expect(await screen.findByTestId('0')).toHaveTextContent('Error');
+
+  });
+
+  test('Multiple starting paths', async () => {
+    render(<TheTest />);
+    fireEvent.input(screen.getByTestId('map-input'), {
+      target: { value: `  x-B-@-A-x` }
+    });
+    fireEvent.click(screen.getByTestId('start-button'));
+    expect(await screen.findByTestId('0')).toHaveTextContent('Error');
+
+  });
+
+  test('Fake turn', async () => {
+    render(<TheTest />);
+    fireEvent.input(screen.getByTestId('map-input'), {
+      target: { value: `  @-A-+-B-x` }
+    });
+    fireEvent.click(screen.getByTestId('start-button'));
+    expect(await screen.findByTestId('0')).toHaveTextContent('Error');
+
+  });
+
+
+
+
 });
